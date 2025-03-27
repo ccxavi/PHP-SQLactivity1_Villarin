@@ -10,27 +10,21 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 } 
 
-function handleSubmit($conn, $productName, $price, $quantity)
+function insertProduct($conn, $productName, $price, $quantity)
 {
-  $text = "";
-  $alert = "";
+    if (empty($productName) || empty($price) || empty($quantity)) {
+        return ("Empty Input");
+    }
 
-  $total = $price * $quantity;
+    $total = $price * $quantity;
+    $sql = "INSERT INTO productData (productName, price, quantity, total) VALUES ('$productName','$price','$quantity', '$total')";
 
-  if (empty($productName) && empty($price) && empty($quantity)) {
-    $text =  "Empty Input";
-  }
-
-  $sql = "INSERT INTO productData (productName, price, quantity, total) VALUES ('$productName','$price','$quantity', '$total')";
-
-  if (mysqli_query($conn, $sql)) {
-    error_reporting(0);
-    ini_set('display_errors', 0);
-  }
-
-  return array("success", "Product Data successfully submitted.");
+    if (mysqli_query($conn, $sql)) {
+        return ("Successfully submitted product data.");
+    } else {
+        return ("Error: " . mysqli_error($conn));
+    }
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -45,7 +39,7 @@ function handleSubmit($conn, $productName, $price, $quantity)
 </head>
 <body>
     <main class="container-fluid d-flex justify-content-center align-items-center vh-100">
-        <div class="card w-100 p-4 card-color shadow-lg" style="max-width: 1000px">
+        <div class="card w-100 p-4 card-color shadow-lg" style="max-width: 900px">
             <div class="card-header">
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="d-flex align-items-center gap-3">
@@ -59,42 +53,49 @@ function handleSubmit($conn, $productName, $price, $quantity)
                 </div>
                 <hr class="mt-3 mb-0" />
             </div>
-                <div class="card card-color p-4 shadow-sm flex-fill">
-                    <h4><i class="bi bi-tags"></i> | Product Price Calculator</h4>
-                    <hr class="mt-2" />
-                    <form method="POST">
-                        <div class="mb-3">
-                            <label for="productName" class="form-label">Product Name:</label>
-                            <input type="text" name="productName" id="productName" class="form-control" required>
+            <div class="card-body d-flex flex-column justify-content-between">
+                <div class="d-flex gap-4">
+                    <div class="card card-color p-4 shadow-sm flex-fill d-flex flex-column">
+                        <div class="card-header card-color border-bottom-0 p-0">
+                            <h4 class="mb-0"><i class="bi bi-tags"></i> | Product Price Calculator</h4>
                         </div>
-                        <div class="mb-3">
-                            <label for="price" class="form-label">Price:</label>
-                            <input type="number" name="price" id="price" class="form-control" required>
+                        <hr class="mt-2 mb-0" />
+                        <div class="card-body">
+                            <form method="POST" class="w-100">
+                                <div class="mb-3">
+                                    <label for="productName" class="form-label">Product Name:</label>
+                                    <input type="text" name="productName" id="productName" class="form-control">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="price" class="form-label">Price:</label>
+                                    <input type="number" name="price" id="price" class="form-control">
+                                </div>
+                                <div class="mb-3">
+                                    <label for="quantity" class="form-label">Quantity:</label>
+                                    <input type="number" name="quantity" id="quantity" class="form-control">
+                                </div>
+                                <button type="submit" name="submit" class="btn btn-primary w-100">Calculate</button>
+                            </form>
                         </div>
-                        <div class="mb-3">
-                            <label for="quantity" class="form-label">Quantity:</label>
-                            <input type="number" name="quantity" id="quantity" class="form-control" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Calculate</button>
-                    </form>
+                    </div>
                 </div>
                 <div class="mt-4">
-                <?php
+                    <?php
                     if ($_SERVER["REQUEST_METHOD"] == "POST") {
-                    $name =  mysqli_real_escape_string($conn, $_POST ["productName"]);
-                    $price =  mysqli_real_escape_string($conn, $_POST ["price"]);
-                    $quantity =  mysqli_real_escape_string($conn, $_POST ["quantity"]);
-
-                    $response = handleSubmit($conn, $name, $price, $quantity);
-                    echo "<p class='alert alert-" . $response[0] . " w-100 text-center' role='alert'>" . $response[1] . "</p>";
-                }
-                ?>
+                        $name = mysqli_real_escape_string($conn, $_POST["productName"]);
+                        $price = mysqli_real_escape_string($conn, $_POST["price"]);
+                        $quantity = mysqli_real_escape_string($conn, $_POST["quantity"]);
+                        
+                        $response = insertProduct($conn, $name, $price, $quantity);
+                        echo "<div class='alert alert-info w-100 text-center m-0' role='alert'> <strong> $response </strong> </div>";
+                    }
+                    ?>
                 </div>
+            </div>
             <div class="card-footer text-center">
-                <hr class="m-0"/>
+                <hr class="m-0" />
                 <p class="text-muted mt-3">© 2025, Czach Villarin. All Rights Reserved.</p>
             </div>
-                </div>
         </div>
     </main>
 </body>
